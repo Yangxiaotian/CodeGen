@@ -1,0 +1,4 @@
+jdbc.driverClassName=jdbc:mysql://IP:3306/数据库名
+jdbc.driverClassName=com.mysql.jdbc.Driver
+jdbc.username=root
+jdbc.password=
