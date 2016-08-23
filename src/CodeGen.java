@@ -40,7 +40,6 @@ public class CodeGen implements ActionListener{
 	JButton button5 = new JButton("后台Dao");
 	JButton button6 = new JButton("后台Service");
 	JScrollPane scroll = new JScrollPane(textarea1);
-	String priFlag = "Inside";
 	String author = "";
 	public void createUI(){
 		frame.setLocation(500,200);
@@ -453,15 +452,16 @@ public class CodeGen implements ActionListener{
 	}
 	public String getDaoCodeCore(String method, String tblName, String tblComment) {
 		String modeName = getModelName(tblName);
+		String prefix = modeName.substring(0,1).toLowerCase()+modeName.substring(1);
 		String cnHead ="";
 		String cnTail = "";
 		String codeBody = "";
 		if(method.equals("add")) {
 			cnHead = "新增";
-			codeBody = "public void add" + modeName + "(Map<String,Object> p);\n";
+			codeBody = "public void add" + modeName + "("+modeName+" "+prefix+");\n";
 		}else if(method.equals("update")) {
 			cnHead = "更新";
-			codeBody = "public int update" + modeName + "(Map<String,Object> p);\n";
+			codeBody = "public void update" + modeName + "("+modeName+" "+prefix+");\n";
 		}else if(method.equals("del")) {
 			cnHead = "删除";
 			codeBody = "public int del" + modeName + "(Map<String,Object> p);\n";
@@ -486,74 +486,52 @@ public class CodeGen implements ActionListener{
 	}
 	public String getServiceCodeCore(String method, String tblName, String tblComment) {
 		String modeName = getModelName(tblName);
+		String prefix = modeName.substring(0, 1).toLowerCase()+modeName.substring(1);
 		String cnHead ="";
 		String cnTail = "";
 		String codeBody = "";
 		String fnName = "";
-		String priFnName = "";
 		if(method.equals("add")) {
 			cnHead = "新增";
 			fnName = "add" + modeName;
-			priFnName = fnName + priFlag;
-			codeBody = "public boolean " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
-			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> p) {" + getFnBody(tblName, priFnName) + "}";
+			codeBody = "public void " + fnName + "("+modeName+" "+prefix+") {" + getFnBody(tblName, fnName) + "}";
 		}else if(method.equals("update")) {
 			cnHead = "更新";
 			fnName = "update" + modeName;
-			priFnName = fnName + priFlag;
-			codeBody = "public boolean " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
-			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> p) {" + getFnBody(tblName, priFnName) + "}";
+			codeBody = "public void " + fnName + "("+modeName+" "+prefix+") {" + getFnBody(tblName, fnName) + "}";
 		}else if(method.equals("del")) {
 			cnHead = "删除";
 			fnName = "del" + modeName;
-			priFnName = fnName + priFlag;
-			codeBody = "public boolean " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
-			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> p) {" + getFnBody(tblName, priFnName) + "}";
+			codeBody = "public void " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
 		}else if(method.equals("list")) {
 			cnHead = "获取";
 			cnTail = "列表";
 			fnName = "get" + modeName + "List";
-			codeBody = "public List<" + modeName + "> " + fnName + "(Map<String,Object> p) {" + getFnBody(fnName) + "}";
+			codeBody = "public List<" + modeName + "> " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
 		}else if(method.equals("count")) {
 			cnHead = "获取";
 			cnTail = "总数";
 			fnName = "get" + modeName + "Count";
-			codeBody = "public int get" + modeName + "Count(Map<String,Object> p) {" + getFnBody(fnName) + "}";
+			codeBody = "public int get" + modeName + "Count(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
 		}
 		String result = "\t/**\n\t * "+cnHead+tblComment+cnTail+"\n\t * @author "+author+"\n\t */\n\t"+codeBody+"\n";
 		return result;
 	}
-	public String getFnBody(String fnName) {
-		if(fnName.endsWith("Count")) {
-			return "\n\t\treturn xxxDao."+fnName+"(p);\n\t";
-		} else if(fnName.endsWith("List")) {
-			return "\n\t\tint total = xxxDao."+fnName.substring(0,fnName.length()-4) + "Count(p);"
-			        + "\n\t\tp.put(gp.util.Const.AJAX_SERVICE_TOTAL, total);"
-					+ "\n\t\treturn xxxDao."+fnName+"(p);\n\t";
-		} 
-		return "";
-	}
 	public String getFnBody(String tblName, String fnName) {
 		String result = "";
-		if(fnName.startsWith("add")) {
-			if(fnName.endsWith(priFlag)) {
-				
-			} else {
-				
-			}
-		} else if(fnName.startsWith("update")) {
-			if(fnName.endsWith(priFlag)) {
-				
-			} else {
-				
-			}
+		String modelName = getModelName(tblName);
+		String prefix = modelName.substring(0, 1).toLowerCase()+modelName.substring(1);
+		if(fnName.startsWith("add") || fnName.startsWith("update")) {
+			return "\n\t\treturn "+prefix+"Dao."+fnName+"("+modelName+" "+prefix+")\n\t";
 		} else if(fnName.startsWith("del")) {
-			if(fnName.endsWith(priFlag)) {
-				
-			} else {
-				
-			}
-		}
+			return "\n\t\treturn "+prefix+"Dao."+fnName+"(p)\n\t";
+		} else if(fnName.endsWith("Count")) {
+			return  "\n\t\tp.put(\"ono\", ono);"
+					+"\n\t\treturn "+prefix+"Dao."+fnName+"(p);\n\t";
+		} else if(fnName.endsWith("List")) {
+			return  "\n\t\tp.put(\"ono\", ono);"
+					+ "\n\t\treturn "+prefix+"Dao."+fnName+"(p);\n\t";
+		} 
 		return result;
 	}
 }
