@@ -549,7 +549,7 @@ public class CodeGen implements ActionListener{
 			cnHead = "获取";
 			cnTail = "列表";
 			fnName = "get" + modeName + "List";
-			codeBody = "public List<" + modeName + "> " + fnName + "(String id, String name, String ono, Integer start, Integer limit) {" + getFnBody(tblName, fnName) + "}";
+			codeBody = "public List<" + modeName + "> " + fnName + "(Integer id, String name, String ono, Integer start, Integer limit) {" + getFnBody(tblName, fnName) + "}";
 		}else if(method.equals("count")) {
 			cnHead = "获取";
 			cnTail = "总数";
