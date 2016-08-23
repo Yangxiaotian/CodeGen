@@ -522,9 +522,9 @@ public class CodeGen implements ActionListener{
 		String modelName = getModelName(tblName);
 		String prefix = modelName.substring(0, 1).toLowerCase()+modelName.substring(1);
 		if(fnName.startsWith("add") || fnName.startsWith("update")) {
-			return "\n\t\treturn "+prefix+"Dao."+fnName+"("+modelName+" "+prefix+")\n\t";
+			return "\n\t\treturn "+prefix+"Dao."+fnName+"("+modelName+" "+prefix+");\n\t";
 		} else if(fnName.startsWith("del")) {
-			return "\n\t\treturn "+prefix+"Dao."+fnName+"(p)\n\t";
+			return "\n\t\treturn "+prefix+"Dao."+fnName+"(p);\n\t";
 		} else if(fnName.endsWith("Count")) {
 			return  "\n\t\tp.put(\"ono\", ono);"
 					+"\n\t\treturn "+prefix+"Dao."+fnName+"(p);\n\t";
