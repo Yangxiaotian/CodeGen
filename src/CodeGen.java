@@ -513,7 +513,7 @@ public class CodeGen implements ActionListener{
 		}else if(method.equals("del")) {
 			cnHead = "删除";
 			fnName = "del" + modeName;
-			codeBody = "public void " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
+			codeBody = "public void " + fnName + "(int id) {" + getFnBody(tblName, fnName) + "}";
 		}else if(method.equals("list")) {
 			cnHead = "获取";
 			cnTail = "列表";
@@ -533,15 +533,19 @@ public class CodeGen implements ActionListener{
 		String modelName = getModelName(tblName);
 		String prefix = modelName.substring(0, 1).toLowerCase()+modelName.substring(1);
 		if(fnName.startsWith("add") || fnName.startsWith("update")) {
-			return "\n\t\treturn "+prefix+"Dao."+fnName+"("+modelName+" "+prefix+");\n\t";
+			return "\n\t\t"+prefix+"Dao."+fnName+"("+prefix+");\n\t";
 		} else if(fnName.startsWith("del")) {
-			return "\n\t\treturn "+prefix+"Dao."+fnName+"(p);\n\t";
+			return 	"\n\t\tMap<String,Object> p = new HashMap<String,Object>();"
+					+"\n\t\tp.put(\"id\", id);"
+					+"\n\t\t"+prefix+"Dao."+fnName+"(p);\n\t";
 		} else if(fnName.endsWith("Count")) {
-			return  "\n\t\tp.put(\"name\", name);"
+			return  "\n\t\tMap<String,Object> p = new HashMap<String,Object>();"
+					+"\n\t\tp.put(\"name\", name);"
 					+"\n\t\tp.put(\"ono\", ono);"
 					+"\n\t\treturn "+prefix+"Dao."+fnName+"(p);\n\t";
 		} else if(fnName.endsWith("List")) {
-			return  "\n\t\tp.put(\"id\", id);"
+			return  "\n\t\tMap<String,Object> p = new HashMap<String,Object>();"
+					+"\n\t\tp.put(\"id\", id);"
 					+"\n\t\tp.put(\"name\", name);"
 					+"\n\t\tp.put(\"ono\", ono);"
 					+"\n\t\tp.put(\"start\", start);"
