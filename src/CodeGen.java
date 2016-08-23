@@ -6,7 +6,6 @@ import java.awt.event.FocusListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -29,6 +28,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 
+
 public class CodeGen implements ActionListener{
 	JFrame frame = new JFrame("基本代码生成工具");
 	JPanel panel = new JPanel();
@@ -36,6 +36,7 @@ public class CodeGen implements ActionListener{
 	JTextField textfield = new JTextField("请输入表名");
 	JButton button1 = new JButton("后台MODEL");
 	JButton button2 = new JButton("前台MODEL");
+	JButton button3 = new JButton("后台CTRL");
 	JButton button4 = new JButton("SQL生成");
 	JButton button5 = new JButton("后台Dao");
 	JButton button6 = new JButton("后台Service");
@@ -66,6 +67,7 @@ public class CodeGen implements ActionListener{
 		JPanel btnP = new JPanel();
 		btnP.add(button1);
 		btnP.add(button2);
+		btnP.add(button3);
 		btnP.add(button4);
 		btnP.add(button5);
 		btnP.add(button6);
@@ -74,6 +76,7 @@ public class CodeGen implements ActionListener{
 		frame.setFocusable(true);
 		button1.addActionListener(this);
 		button2.addActionListener(this);
+		button3.addActionListener(this);
 		button4.addActionListener(this);
 		button5.addActionListener(this);
 		button6.addActionListener(this);
@@ -145,7 +148,9 @@ public class CodeGen implements ActionListener{
 				 Code = getBackCode(tblName, rs);
 			 } else if(e.getSource() == button2){
 				 Code = getFrontCode(tblName, rs); 
-			 } else if(e.getSource() == button4){
+			 } else if(e.getSource() == button3){
+				 Code = getBackCtrlCode(tblName); 
+			 }else if(e.getSource() == button4){
 				 Code = getSqlCode(tblName, rs, "");
 			 } else if(e.getSource() == button5) {
 				Code = getDaoCode(tblName, "");
@@ -270,6 +275,29 @@ public class CodeGen implements ActionListener{
 		result += "}\n";
 		return result;
 	}
+	public String getBackCtrlCode(String tblName) {
+		String result = "";
+		String modeName = getModelName(tblName);
+		String prefix = modeName.substring(0, 1).toLowerCase()+modeName.substring(1);
+		result += "@Controller(value = \"com.XXX.ctrl."+modeName+"Ctrl\")\n";
+		result += "@RequestMapping(\"[app]/[model]\")\n";
+		result += "public class "+modeName+"Ctrl {\n";
+		result += "\t@Autowired\n\tprivate "+modeName+"Service "+prefix+"Service;\n";
+		result += "\t@Autowired\n\tprivate CoreService aCoreService;\n";
+        result += "\t@RequestMapping(value = \"list\", method = RequestMethod.GET)\n\t@ResponseBody\n";
+		result += "\tpublic Map<String, Object> list(\n";
+		result += "\t\t@RequestParam(value = \"id\", required = false) Integer id,\n";	
+		result += "\t\t@RequestParam(value = \"name\", required = false) String name,\n";	
+		result += "\t\t@RequestParam(value = \"ono\", required = false) String ono,\n";			
+		result += "\t\t@RequestParam(value = \"start\", required = false) Integer start,\n";			
+		result += "\t\t@RequestParam(value = \"limit\", required = false) Integer limit,\n";		
+		result += "\t) {\n\t\ttry {\n\t\t\taCoreService.assertFunctionAuth(\"\");\n";
+		result += "\t\t\tif (ono == null) {\n\t\t\t\tono = aCoreService.getMyOno();\n\t\t\t}\n";
+		result += "\t\t\treturn WebUtil.getSuccessMap("+prefix+"Service.get"+modeName+"List(id, name, ono, start, limit), "+prefix+"Service.get"+modeName+"Count(name, ono));\n";
+		result += "\t\t} catch(Exception e) {\n\t\t\treturn WebUtil.getFailureMap(e.getMessage());\n\t\t}\n\t}";		
+
+		return result;
+	}
 	public boolean notBase(String s) {
 		String[] basePool = {};
 		for(String elem: basePool) {
@@ -295,7 +323,8 @@ public class CodeGen implements ActionListener{
 		return result;
 	}
 	public String getSqlCode(String tblName, ResultSet rs, String tblComment) throws Exception{
-		String result = "";
+		String modeName = getModelName(tblName);
+		String result = "<mapper namespace=\"com.XXX.dao."+modeName+">\n";
 		List<Map<String,Object>> mapList = new ArrayList<Map<String,Object>>();
 		while(rs.next()) {
 			String columnName = rs.getString("COLUMN_NAME");
@@ -310,7 +339,7 @@ public class CodeGen implements ActionListener{
 		String insertSql = getInsertSql(tblName, mapList, tblComment);
 		String updateSql = getUpdateSql(tblName, mapList, tblComment);
 		String delSql = getDelSql(tblName, mapList, tblComment);
-		result += countSql + listSql + insertSql + updateSql + delSql;
+		result += countSql + listSql + insertSql + updateSql + delSql + "\n</mapper>";
 		return result;
 	}
 	public String getInsertSql(String tblName, List<Map<String,Object>> mapList, String tblComment) {
