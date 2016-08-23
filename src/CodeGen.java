@@ -162,7 +162,7 @@ public class CodeGen implements ActionListener{
 		String result;
 		int length = arr.length;
 		if(arr[0].split(" ")[1].equals("table")&& arr[1].equals("(") && arr[length-1].equals(");")) {
-			result = "import cyts.base.model.BaseModel;\npublic class " + getModelName(arr[0].split(" ")[2]) +
+			result = "public class " + getModelName(arr[0].split(" ")[2]) +
 					" {\n";
 			for(int i = 2; notBase(arr[i]); i++) {
 				String[] temp = arr[i].split("\\s{2,}");
