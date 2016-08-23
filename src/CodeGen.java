@@ -319,7 +319,7 @@ public class CodeGen implements ActionListener{
 		String modeName = getModelName(tblName);
 		try {
 			result = "\t<!-- 新增" + tblComment + " -->\n\t<insert id=\"add" + modeName 
-					+ "\" parameterType=\"map\" useGeneratedKeys=\"true\" keyProperty=\"BIGBANG\">\n\t\tinsert into " 
+					+ "\" parameterType=\"com.XXX.model."+modeName+"\" useGeneratedKeys=\"true\" keyProperty=\"BIGBANG\">\n\t\tinsert into " 
 					+ tblName + "\n";
 			String up = "\t\t(\n\t\t\t";
 			String down = "values\n\t\t(\n\t\t\t";
@@ -330,13 +330,13 @@ public class CodeGen implements ActionListener{
 				if("PRI".equals(columnKey)) {
 					 primaryKey = columnName;
 				}else if(notBase(columnName)) {
-					up += columnName +(i+1==mapList.size()?"":",")+"\n\t\t\t";
-					down += "#{" + columnName + "}"+(i+1==mapList.size()?"":",")+"\n\t\t\t";
+					up += columnName +(i+1==mapList.size()?"\n\t\t":",\n\t\t\t");
+					down += "#{" + columnName + "}"+(i+1==mapList.size()?"\n\t\t":",\n\t\t\t");
 				}
 				i++;
 			}
-			result += up + "\n\t\t)" 
-					     + down + "\n\t\t)\n"; 
+			result += up + ")" 
+					     + down + ")\n"; 
 			result += "\t</insert>\n";
 			result = result.replace("BIGBANG", primaryKey);
 		} catch(Exception e) {
@@ -351,7 +351,7 @@ public class CodeGen implements ActionListener{
 		String modeName = getModelName(tblName);
 		try {
 			result = "\t<!-- 更改" + tblComment + " -->\n\t<update id=\"update" + modeName 
-					+ "\" parameterType=\"map\">\n\t\tupdate " + tblName + "\n\t\tset";
+					+ "\" parameterType=\"com.XXX.model."+modeName+"\">\n\t\tupdate " + tblName + "\n\t\tset";
 			int i = 0;
 			for(Map<String,Object> map: mapList) {
 				String columnName = (String)map.get("columnName");
@@ -363,8 +363,7 @@ public class CodeGen implements ActionListener{
 				}
 				i++;
 			}
-			result += " \n\t\t" + 
-						"where " + primaryKey + " = #{" + primaryKey + "}\n"; 
+			result += "where " + primaryKey + " = #{" + primaryKey + "}\n"; 
 			result += "\t</update>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -387,7 +386,9 @@ public class CodeGen implements ActionListener{
 				}
 			}
 			result += primaryKey + ") from " + tblName + 
-						" where "+getIfTest("ono", "like", "'${ono}%'")+"\n\t\t    ";
+						" where \n\t\t"
+					+getIfTest("ono", "like", "'${ono}%'")+"\n\t\t"
+					+getIfTest("name", "like", "'%${name}%'")+"\n\t\t    ";
 			result += "\n\t</select>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -401,7 +402,7 @@ public class CodeGen implements ActionListener{
 		String modeName = getModelName(tblName);
 		try {
 			result = "\t<!-- 获取" + tblComment + " -->\n\t<select id=\"get" + modeName 
-					+ "List\" parameterType=\"map\" resultType=\"" + modeName + "\">\n\t\tselect\n\t";
+					+ "List\" parameterType=\"map\" resultType=\"com.XXX.model." + modeName + "\">\n\t\tselect\n\t";
 			int i = 0;
 			for(Map<String,Object> map: mapList) {
 				String columnName = (String)map.get("columnName");
@@ -414,8 +415,12 @@ public class CodeGen implements ActionListener{
 				}
 				i++;
 			}
-			result += "\t\n\t\tfrom " + tblName + 
-						"\n\t\twhere "+getIfTest("ono", "like", "'${ono}%'")+"\n\t\t    " + getIfTest(primaryKey);
+			result += "\tfrom " + tblName + 
+						" where\n\t\t"
+					+getIfTest(primaryKey)+"\n\t\t"
+					+getIfTest("name", "like", "'%${name}%'")+"\n\t\t"
+					+getIfTest("ono", "like", "'${ono}%'")+"\n\t\t"
+					+getIfTest("start", "", "limit ${start}, ${limit}");
 			result += "\n\t</select>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -429,14 +434,20 @@ public class CodeGen implements ActionListener{
 	public String getIfTest(String columnName, String flag, String tail) {
 		if(flag==null) flag = "=";
 		if(tail==null) tail = "#{"+columnName+"}";
-		return "<if test=\""+columnName+"!=null\">and "+columnName+" "+flag+" "+tail+"</if>";
+		String _and = "and ";
+		String col = columnName;
+		if(flag.length() == 0) {
+			_and = "";
+			col = "";
+		}
+		return "<if test=\""+columnName+"!=null\">"+_and+col+" "+flag+(flag.length()>0?" ":"")+tail+"</if>";
 	}
 	public String getDelSql(String tblName, List<Map<String,Object>> mapList, String tblComment) {
 		String result = "";
 		String modeName = getModelName(tblName);
 		try {
 			result = "\t<!-- 删除" + tblComment + " -->\n\t<delete id=\"del" + modeName 
-					+ "\" parameterType=\"map\">\n\t\tdelete from" + tblName + " where id = #{id}\n\t</delete>\n";
+					+ "\" parameterType=\"map\">\n\t\tdelete from " + tblName + " where id = #{id}\n\t</delete>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
 			return "输入有误";
@@ -507,12 +518,12 @@ public class CodeGen implements ActionListener{
 			cnHead = "获取";
 			cnTail = "列表";
 			fnName = "get" + modeName + "List";
-			codeBody = "public List<" + modeName + "> " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
+			codeBody = "public List<" + modeName + "> " + fnName + "(String id, String name, String ono, Integer start, Integer limit) {" + getFnBody(tblName, fnName) + "}";
 		}else if(method.equals("count")) {
 			cnHead = "获取";
 			cnTail = "总数";
 			fnName = "get" + modeName + "Count";
-			codeBody = "public int get" + modeName + "Count(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
+			codeBody = "public int get" + modeName + "Count(String name, String ono) {" + getFnBody(tblName, fnName) + "}";
 		}
 		String result = "\t/**\n\t * "+cnHead+tblComment+cnTail+"\n\t * @author "+author+"\n\t */\n\t"+codeBody+"\n";
 		return result;
@@ -526,10 +537,15 @@ public class CodeGen implements ActionListener{
 		} else if(fnName.startsWith("del")) {
 			return "\n\t\treturn "+prefix+"Dao."+fnName+"(p);\n\t";
 		} else if(fnName.endsWith("Count")) {
-			return  "\n\t\tp.put(\"ono\", ono);"
+			return  "\n\t\tp.put(\"name\", name);"
+					+"\n\t\tp.put(\"ono\", ono);"
 					+"\n\t\treturn "+prefix+"Dao."+fnName+"(p);\n\t";
 		} else if(fnName.endsWith("List")) {
-			return  "\n\t\tp.put(\"ono\", ono);"
+			return  "\n\t\tp.put(\"id\", id);"
+					+"\n\t\tp.put(\"name\", name);"
+					+"\n\t\tp.put(\"ono\", ono);"
+					+"\n\t\tp.put(\"start\", start);"
+					+"\n\t\tp.put(\"limit\", limit);"
 					+ "\n\t\treturn "+prefix+"Dao."+fnName+"(p);\n\t";
 		} 
 		return result;
