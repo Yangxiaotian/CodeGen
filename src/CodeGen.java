@@ -36,7 +36,6 @@ public class CodeGen implements ActionListener{
 	JTextField textfield = new JTextField("请输入表名");
 	JButton button1 = new JButton("后台MODEL");
 	JButton button2 = new JButton("前台MODEL");
-	JButton button3 = new JButton("PDM导出SQL处理");
 	JButton button4 = new JButton("SQL生成");
 	JButton button5 = new JButton("后台Mapper");
 	JButton button6 = new JButton("后台Service");
@@ -67,7 +66,6 @@ public class CodeGen implements ActionListener{
 		JPanel btnP = new JPanel();
 		btnP.add(button1);
 		btnP.add(button2);
-		btnP.add(button3);
 		btnP.add(button4);
 		btnP.add(button5);
 		btnP.add(button6);
@@ -76,7 +74,6 @@ public class CodeGen implements ActionListener{
 		frame.setFocusable(true);
 		button1.addActionListener(this);
 		button2.addActionListener(this);
-		button3.addActionListener(this);
 		button4.addActionListener(this);
 		button5.addActionListener(this);
 		button6.addActionListener(this);
@@ -109,13 +106,6 @@ public class CodeGen implements ActionListener{
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		// TODO Auto-generated method stub
-		if(e.getSource() == button3) {
-			String rawSql = textarea1.getText();
-			String sql = this.processSql(rawSql);
-			textarea1.setText(sql);
-			return;
-		}
 		String tblName = textfield.getText();
 		
 		try {
@@ -173,7 +163,7 @@ public class CodeGen implements ActionListener{
 		int length = arr.length;
 		if(arr[0].split(" ")[1].equals("table")&& arr[1].equals("(") && arr[length-1].equals(");")) {
 			result = "import cyts.base.model.BaseModel;\npublic class " + getModelName(arr[0].split(" ")[2]) +
-					" extends BaseModel {\n";
+					" {\n";
 			for(int i = 2; notBase(arr[i]); i++) {
 				String[] temp = arr[i].split("\\s{2,}");
 				if(temp[2].indexOf("varchar") != -1) {
@@ -224,7 +214,7 @@ public class CodeGen implements ActionListener{
 			} else if(temp[2].indexOf("int") != -1) {
 				temp[2] = "int";
 			} else if(temp[2].indexOf("decimal") != -1) {
-				temp[2] = "decimal";
+				temp[2] = "number";
 			} 
 			if(notBase(temp[1])) {
 				list.add(temp);
@@ -278,7 +268,7 @@ public class CodeGen implements ActionListener{
 		return result;
 	}
 	public boolean notBase(String s) {
-		String[] basePool = {"create_user","modify_user","create_date","modify_date","c_ou_code","c_d_code","m_ou_code","m_d_code","valid","version"};
+		String[] basePool = {};
 		for(String elem: basePool) {
 			if(s.equals(elem)) {
 				return false;
@@ -330,18 +320,20 @@ public class CodeGen implements ActionListener{
 					+ tblName + "\n";
 			String up = "\t\t(\n\t\t\t";
 			String down = "values\n\t\t(\n\t\t\t";
+			int i = 0;
 			for(Map<String,Object> map: mapList) {
 				String columnName = (String)map.get("columnName");
 				String columnKey = (String)map.get("columnKey");
 				if("PRI".equals(columnKey)) {
 					 primaryKey = columnName;
 				}else if(notBase(columnName)) {
-					up += columnName + ",\n\t\t\t";
-					down += "#{" + columnName + "},\n\t\t\t";
+					up += columnName +(i+1==mapList.size()?"":",")+"\n\t\t\t";
+					down += "#{" + columnName + "}"+(i+1==mapList.size()?"":",")+"\n\t\t\t";
 				}
+				i++;
 			}
-			result += up + "c_ou_code,\n\t\t\tvalid\n\t\t)" 
-					     + down + "#{c_ou_code},\n\t\t\t0\n\t\t)\n"; 
+			result += up + "\n\t\t)" 
+					     + down + "\n\t\t)\n"; 
 			result += "\t</insert>\n";
 			result = result.replace("BIGBANG", primaryKey);
 		} catch(Exception e) {
@@ -357,17 +349,19 @@ public class CodeGen implements ActionListener{
 		try {
 			result = "\t<!-- 更改" + tblComment + " -->\n\t<update id=\"update" + modeName 
 					+ "\" parameterType=\"map\">\n\t\tupdate " + tblName + "\n\t\tset";
+			int i = 0;
 			for(Map<String,Object> map: mapList) {
 				String columnName = (String)map.get("columnName");
 				String columnKey = (String)map.get("columnKey");
 				if("PRI".equals(columnKey)) {
 					 primaryKey = columnName;
 				}else if(notBase(columnName)) {
-					result += "    " + columnName + " = #{" + columnName + "},\n\t\t";
+					result += "    " + columnName + " = #{" + columnName + "}"+(i+1==mapList.size()?"":",")+"\n\t\t";
 				}
+				i++;
 			}
-			result += "    version = version + 1\n\t\t" + 
-						"where " + primaryKey + " = #{" + primaryKey + "} and version = #{version}\n"; 
+			result += " \n\t\t" + 
+						"where " + primaryKey + " = #{" + primaryKey + "}\n"; 
 			result += "\t</update>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -390,7 +384,7 @@ public class CodeGen implements ActionListener{
 				}
 			}
 			result += primaryKey + ") from " + tblName + 
-						" where valid = 0\n\t\t    " + getIfTest(primaryKey);
+						" where "+getIfTest("ono", "like", "'${ono}%'")+"\n\t\t    ";
 			result += "\n\t</select>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -405,6 +399,7 @@ public class CodeGen implements ActionListener{
 		try {
 			result = "\t<!-- 获取" + tblComment + " -->\n\t<select id=\"get" + modeName 
 					+ "List\" parameterType=\"map\" resultType=\"" + modeName + "\">\n\t\tselect\n\t";
+			int i = 0;
 			for(Map<String,Object> map: mapList) {
 				String columnName = (String)map.get("columnName");
 				String columnKey = (String)map.get("columnKey");
@@ -412,11 +407,12 @@ public class CodeGen implements ActionListener{
 					 primaryKey = columnName;
 				}
 				if(!columnName.equals("version")){
-					result += "\t    " + columnName + ",\n\t";
+					result += "\t    " + columnName + ""+(i+1==mapList.size()?"":",")+"\n\t";
 				}
+				i++;
 			}
-			result += "\t    version\n\t\tfrom " + tblName + 
-						"\n\t\twhere valid = 0\n\t\t    " + getIfTest(primaryKey);
+			result += "\t\n\t\tfrom " + tblName + 
+						"\n\t\twhere "+getIfTest("ono", "like", "'${ono}%'")+"\n\t\t    " + getIfTest(primaryKey);
 			result += "\n\t</select>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -425,25 +421,19 @@ public class CodeGen implements ActionListener{
 		return result;
 	}
 	public String getIfTest(String columnName) {
-		return "<if test=\""+columnName+"!=null\">and "+columnName+"=#{"+columnName+"}</if>";
+		return getIfTest(columnName,  null, null);
+	}
+	public String getIfTest(String columnName, String flag, String tail) {
+		if(flag==null) flag = "=";
+		if(tail==null) tail = "#{"+columnName+"}";
+		return "<if test=\""+columnName+"!=null\">and "+columnName+" "+flag+" "+tail+"</if>";
 	}
 	public String getDelSql(String tblName, List<Map<String,Object>> mapList, String tblComment) {
 		String result = "";
-		String primaryKey = null;
 		String modeName = getModelName(tblName);
 		try {
-			result = "\t<!-- 删除" + tblComment + " -->\n\t<update id=\"del" + modeName 
-					+ "\" parameterType=\"map\">\n\t\tupdate " + tblName + "\n\t\tset";
-			for(Map<String,Object> map: mapList) {
-				String columnName = (String)map.get("columnName");
-				String columnKey = (String)map.get("columnKey");
-				if("PRI".equals(columnKey)) {
-					 primaryKey = columnName;
-				}
-			}
-			result += "\n\t\t    valid = #{"+primaryKey+"},\n\t\t    version = version + 1\n\t\t" + 
-						"where " + primaryKey + " = #{" + primaryKey + "} and version = #{version}\n"; 
-			result += "\t</update>\n";
+			result = "\t<!-- 删除" + tblComment + " -->\n\t<delete id=\"del" + modeName 
+					+ "\" parameterType=\"map\">\n\t\tdelete from" + tblName + " where id = #{id}\n\t</delete>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
 			return "输入有误";
