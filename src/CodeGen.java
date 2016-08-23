@@ -37,7 +37,7 @@ public class CodeGen implements ActionListener{
 	JButton button1 = new JButton("后台MODEL");
 	JButton button2 = new JButton("前台MODEL");
 	JButton button4 = new JButton("SQL生成");
-	JButton button5 = new JButton("后台Mapper");
+	JButton button5 = new JButton("后台Dao");
 	JButton button6 = new JButton("后台Service");
 	JScrollPane scroll = new JScrollPane(textarea1);
 	String priFlag = "Inside";
@@ -149,7 +149,7 @@ public class CodeGen implements ActionListener{
 			 } else if(e.getSource() == button4){
 				 Code = getSqlCode(tblName, rs, "");
 			 } else if(e.getSource() == button5) {
-				Code = getMapperCode(tblName, "");
+				Code = getDaoCode(tblName, "");
 			 } else if(e.getSource() == button6) {
 				 Code = getServiceCode(tblName, "");
 			 } else {
@@ -444,14 +444,14 @@ public class CodeGen implements ActionListener{
 		}
 		return result;
 	}
-	public String getMapperCode(String tblName, String tblComment) {
-		return getMapperCodeCore("count", tblName, tblComment) 
-				+ getMapperCodeCore("list", tblName, tblComment)
-				+ getMapperCodeCore("add", tblName, tblComment)
-				+ getMapperCodeCore("update", tblName, tblComment)
-				+ getMapperCodeCore("del", tblName, tblComment);
+	public String getDaoCode(String tblName, String tblComment) {
+		return getDaoCodeCore("count", tblName, tblComment) 
+				+ getDaoCodeCore("list", tblName, tblComment)
+				+ getDaoCodeCore("add", tblName, tblComment)
+				+ getDaoCodeCore("update", tblName, tblComment)
+				+ getDaoCodeCore("del", tblName, tblComment);
 	}
-	public String getMapperCodeCore(String method, String tblName, String tblComment) {
+	public String getDaoCodeCore(String method, String tblName, String tblComment) {
 		String modeName = getModelName(tblName);
 		String cnHead ="";
 		String cnTail = "";
@@ -525,11 +525,11 @@ public class CodeGen implements ActionListener{
 	}
 	public String getFnBody(String fnName) {
 		if(fnName.endsWith("Count")) {
-			return "\n\t\treturn xxxMapper."+fnName+"(p);\n\t";
+			return "\n\t\treturn xxxDao."+fnName+"(p);\n\t";
 		} else if(fnName.endsWith("List")) {
-			return "\n\t\tint total = xxxMapper."+fnName.substring(0,fnName.length()-4) + "Count(p);"
+			return "\n\t\tint total = xxxDao."+fnName.substring(0,fnName.length()-4) + "Count(p);"
 			        + "\n\t\tp.put(gp.util.Const.AJAX_SERVICE_TOTAL, total);"
-					+ "\n\t\treturn xxxMapper."+fnName+"(p);\n\t";
+					+ "\n\t\treturn xxxDao."+fnName+"(p);\n\t";
 		} 
 		return "";
 	}
