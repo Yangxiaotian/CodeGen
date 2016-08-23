@@ -290,11 +290,13 @@ public class CodeGen implements ActionListener{
 		result += "\t\t@RequestParam(value = \"name\", required = false) String name,\n";	
 		result += "\t\t@RequestParam(value = \"ono\", required = false) String ono,\n";			
 		result += "\t\t@RequestParam(value = \"start\", required = false) Integer start,\n";			
-		result += "\t\t@RequestParam(value = \"limit\", required = false) Integer limit,\n";		
+		result += "\t\t@RequestParam(value = \"limit\", required = false) Integer limit\n";		
 		result += "\t) {\n\t\ttry {\n\t\t\taCoreService.assertFunctionAuth(\"\");\n";
 		result += "\t\t\tif (ono == null) {\n\t\t\t\tono = aCoreService.getMyOno();\n\t\t\t}\n";
 		result += "\t\t\treturn WebUtil.getSuccessMap("+prefix+"Service.get"+modeName+"List(id, name, ono, start, limit), "+prefix+"Service.get"+modeName+"Count(name, ono));\n";
-		result += "\t\t} catch(Exception e) {\n\t\t\treturn WebUtil.getFailureMap(e.getMessage());\n\t\t}\n\t}";		
+		result += "\t\t} catch(Exception e) {\n\t\t\treturn WebUtil.getFailureMap(e.getMessage());\n\t\t}\n\t}";
+		
+		result += "\n}";
 
 		return result;
 	}
