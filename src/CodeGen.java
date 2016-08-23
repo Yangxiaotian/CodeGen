@@ -30,15 +30,15 @@ import javax.swing.JTextField;
 
 
 public class CodeGen implements ActionListener{
-	JFrame frame = new JFrame("»ù±¾´úÂëÉú³É¹¤¾ß");
+	JFrame frame = new JFrame("åŸºæœ¬ä»£ç ç”Ÿæˆå·¥å…·");
 	JPanel panel = new JPanel();
-	JTextArea textarea1 = new JTextArea("½á¹ûÊä³ö");
-	JTextField textfield = new JTextField("ÇëÊäÈë±íÃû");
-	JButton button1 = new JButton("ºóÌ¨MODEL");
-	JButton button2 = new JButton("Ç°Ì¨MODEL");
-	JButton button4 = new JButton("SQLÉú³É");
-	JButton button5 = new JButton("ºóÌ¨Mapper");
-	JButton button6 = new JButton("ºóÌ¨Service");
+	JTextArea textarea1 = new JTextArea("ç»“æœè¾“å‡º");
+	JTextField textfield = new JTextField("è¯·è¾“å…¥è¡¨å");
+	JButton button1 = new JButton("åå°MODEL");
+	JButton button2 = new JButton("å‰å°MODEL");
+	JButton button4 = new JButton("SQLç”Ÿæˆ");
+	JButton button5 = new JButton("åå°Mapper");
+	JButton button6 = new JButton("åå°Service");
 	JScrollPane scroll = new JScrollPane(textarea1);
 	String priFlag = "Inside";
 	String author = "";
@@ -53,7 +53,7 @@ public class CodeGen implements ActionListener{
 			@Override
 			public void focusLost(FocusEvent e) {
 				// TODO Auto-generated method stub
-				if(textfield.getText().equals("")) textfield.setText("ÊäÈë±íÃû");
+				if(textfield.getText().equals("")) textfield.setText("è¾“å…¥è¡¨å");
 			}
 			
 			@Override
@@ -97,8 +97,8 @@ public class CodeGen implements ActionListener{
 				binDir.mkdirs();
 			}
 			file.createNewFile();
-			OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(path), "GBK");
-			osw.write("jdbc.driverClassName=jdbc:mysql://IP:3306/Êı¾İ¿âÃû\r\n"+
+			OutputStreamWriter osw = new OutputStreamWriter(new FileOutputStream(path), "UTF-8");
+			osw.write("jdbc.driverClassName=jdbc:mysql://IP:3306/æ•°æ®åº“å\r\n"+
                       "jdbc.driverClassName=com.mysql.jdbc.Driver\r\n"+
                       "jdbc.username=root\r\n"+
                       "jdbc.password=\r\n"+
@@ -114,7 +114,7 @@ public class CodeGen implements ActionListener{
 		try {
 			checkSetting();
 			String path = "bin\\setting.txt";
-			InputStreamReader reader = new InputStreamReader(new FileInputStream(path), "GBK");
+			InputStreamReader reader = new InputStreamReader(new FileInputStream(path), "UTF-8");
 	        BufferedReader br = new BufferedReader(reader);
 	        String str = null;
 	        String url = null;
@@ -139,7 +139,7 @@ public class CodeGen implements ActionListener{
 			ResultSet rs1 = stmt.executeQuery("select * from information_schema.TABLES where table_name = \'" + tblName + "\'" + "and table_schema = \'"+dataBaseName+"\'");
 			rs1.next();
 //			 String tblComment = rs1.getString("TABLE_COMMENT");
-//			 tblComment = tblComment.replace("\n", "£º");
+//			 tblComment = tblComment.replace("\n", "ï¼š");
 			 ResultSet rs = stmt.executeQuery("select * from information_schema.COLUMNS where table_name = \'" + tblName + "\'" + "and table_schema = \'"+dataBaseName+"\'");
 			 String Code;
 			 if(e.getSource() == button1) {
@@ -181,7 +181,7 @@ public class CodeGen implements ActionListener{
 				} else if(temp[2].indexOf("decimal") != -1) {
 					temp[2] = "double";
 				} else {
-					throw new Exception("ÊäÈë¸ñÊ½ÓĞÎó\n" + temp[2]);
+					throw new Exception("è¾“å…¥æ ¼å¼æœ‰è¯¯\n" + temp[2]);
 				}
 				list.add(temp);
 			}
@@ -196,7 +196,7 @@ public class CodeGen implements ActionListener{
 			}
 			result += "}\n";
 		} else {
-			throw new Exception("ÊäÈë¸ñÊ½ÓĞÎó\n");
+			throw new Exception("è¾“å…¥æ ¼å¼æœ‰è¯¯\n");
 		}
 		
 		return result;
@@ -319,7 +319,7 @@ public class CodeGen implements ActionListener{
 		String primaryKey = null;
 		String modeName = getModelName(tblName);
 		try {
-			result = "\t<!-- ĞÂÔö" + tblComment + " -->\n\t<insert id=\"add" + modeName 
+			result = "\t<!-- æ–°å¢" + tblComment + " -->\n\t<insert id=\"add" + modeName 
 					+ "\" parameterType=\"map\" useGeneratedKeys=\"true\" keyProperty=\"BIGBANG\">\n\t\tinsert into " 
 					+ tblName + "\n";
 			String up = "\t\t(\n\t\t\t";
@@ -342,7 +342,7 @@ public class CodeGen implements ActionListener{
 			result = result.replace("BIGBANG", primaryKey);
 		} catch(Exception e) {
 			e.printStackTrace();
-			return "ÊäÈëÓĞÎó";
+			return "è¾“å…¥æœ‰è¯¯";
 		}
 		return result;
 	}
@@ -351,7 +351,7 @@ public class CodeGen implements ActionListener{
 		String primaryKey = null;
 		String modeName = getModelName(tblName);
 		try {
-			result = "\t<!-- ¸ü¸Ä" + tblComment + " -->\n\t<update id=\"update" + modeName 
+			result = "\t<!-- æ›´æ”¹" + tblComment + " -->\n\t<update id=\"update" + modeName 
 					+ "\" parameterType=\"map\">\n\t\tupdate " + tblName + "\n\t\tset";
 			int i = 0;
 			for(Map<String,Object> map: mapList) {
@@ -369,7 +369,7 @@ public class CodeGen implements ActionListener{
 			result += "\t</update>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
-			return "ÊäÈëÓĞÎó";
+			return "è¾“å…¥æœ‰è¯¯";
 		}
 		return result;
 	}
@@ -378,7 +378,7 @@ public class CodeGen implements ActionListener{
 		String primaryKey = null;
 		String modeName = getModelName(tblName);
 		try {
-			result = "\t<!-- »ñÈ¡" + tblComment + " ÊıÁ¿-->\n\t<select id=\"get" + modeName 
+			result = "\t<!-- è·å–" + tblComment + " æ•°é‡-->\n\t<select id=\"get" + modeName 
 					+ "Count\" parameterType=\"map\" resultType=\"int\">\n\t\tselect count(";
 			for(Map<String,Object> map: mapList) {
 				String columnName = (String)map.get("columnName");
@@ -392,7 +392,7 @@ public class CodeGen implements ActionListener{
 			result += "\n\t</select>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
-			return "//»ñÈ¡" + tblComment +"ÊıÁ¿ÊäÈëÓĞÎó";
+			return "//è·å–" + tblComment +"æ•°é‡è¾“å…¥æœ‰è¯¯";
 		}
 		return result;
 	}
@@ -401,7 +401,7 @@ public class CodeGen implements ActionListener{
 		String primaryKey = null;
 		String modeName = getModelName(tblName);
 		try {
-			result = "\t<!-- »ñÈ¡" + tblComment + " -->\n\t<select id=\"get" + modeName 
+			result = "\t<!-- è·å–" + tblComment + " -->\n\t<select id=\"get" + modeName 
 					+ "List\" parameterType=\"map\" resultType=\"" + modeName + "\">\n\t\tselect\n\t";
 			int i = 0;
 			for(Map<String,Object> map: mapList) {
@@ -420,7 +420,7 @@ public class CodeGen implements ActionListener{
 			result += "\n\t</select>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
-			return "ÊäÈëÓĞÎó";
+			return "è¾“å…¥æœ‰è¯¯";
 		}
 		return result;
 	}
@@ -436,11 +436,11 @@ public class CodeGen implements ActionListener{
 		String result = "";
 		String modeName = getModelName(tblName);
 		try {
-			result = "\t<!-- É¾³ı" + tblComment + " -->\n\t<delete id=\"del" + modeName 
+			result = "\t<!-- åˆ é™¤" + tblComment + " -->\n\t<delete id=\"del" + modeName 
 					+ "\" parameterType=\"map\">\n\t\tdelete from" + tblName + " where id = #{id}\n\t</delete>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
-			return "ÊäÈëÓĞÎó";
+			return "è¾“å…¥æœ‰è¯¯";
 		}
 		return result;
 	}
@@ -457,21 +457,21 @@ public class CodeGen implements ActionListener{
 		String cnTail = "";
 		String codeBody = "";
 		if(method.equals("add")) {
-			cnHead = "ĞÂÔö";
+			cnHead = "æ–°å¢";
 			codeBody = "public void add" + modeName + "(Map<String,Object> p);\n";
 		}else if(method.equals("update")) {
-			cnHead = "¸üĞÂ";
+			cnHead = "æ›´æ–°";
 			codeBody = "public int update" + modeName + "(Map<String,Object> p);\n";
 		}else if(method.equals("del")) {
-			cnHead = "É¾³ı";
+			cnHead = "åˆ é™¤";
 			codeBody = "public int del" + modeName + "(Map<String,Object> p);\n";
 		}else if(method.equals("list")) {
-			cnHead = "»ñÈ¡";
-			cnTail = "ÁĞ±í";
+			cnHead = "è·å–";
+			cnTail = "åˆ—è¡¨";
 			codeBody = "public List<" + modeName + "> get" + modeName + "List(Map<String,Object> p);\n";
 		}else if(method.equals("count")) {
-			cnHead = "»ñÈ¡";
-			cnTail = "×ÜÊı";
+			cnHead = "è·å–";
+			cnTail = "æ€»æ•°";
 			codeBody = "public int get" + modeName + "Count(Map<String,Object> p);\n";
 		}
 		String result = "\t/**\n\t * "+cnHead+tblComment+cnTail+"\n\t * @author "+author+"\n\t */\n\t"+codeBody;
@@ -492,31 +492,31 @@ public class CodeGen implements ActionListener{
 		String fnName = "";
 		String priFnName = "";
 		if(method.equals("add")) {
-			cnHead = "ĞÂÔö";
+			cnHead = "æ–°å¢";
 			fnName = "add" + modeName;
 			priFnName = fnName + priFlag;
 			codeBody = "public boolean " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
 			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> p) {" + getFnBody(tblName, priFnName) + "}";
 		}else if(method.equals("update")) {
-			cnHead = "¸üĞÂ";
+			cnHead = "æ›´æ–°";
 			fnName = "update" + modeName;
 			priFnName = fnName + priFlag;
 			codeBody = "public boolean " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
 			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> p) {" + getFnBody(tblName, priFnName) + "}";
 		}else if(method.equals("del")) {
-			cnHead = "É¾³ı";
+			cnHead = "åˆ é™¤";
 			fnName = "del" + modeName;
 			priFnName = fnName + priFlag;
 			codeBody = "public boolean " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
 			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> p) {" + getFnBody(tblName, priFnName) + "}";
 		}else if(method.equals("list")) {
-			cnHead = "»ñÈ¡";
-			cnTail = "ÁĞ±í";
+			cnHead = "è·å–";
+			cnTail = "åˆ—è¡¨";
 			fnName = "get" + modeName + "List";
 			codeBody = "public List<" + modeName + "> " + fnName + "(Map<String,Object> p) {" + getFnBody(fnName) + "}";
 		}else if(method.equals("count")) {
-			cnHead = "»ñÈ¡";
-			cnTail = "×ÜÊı";
+			cnHead = "è·å–";
+			cnTail = "æ€»æ•°";
 			fnName = "get" + modeName + "Count";
 			codeBody = "public int get" + modeName + "Count(Map<String,Object> p) {" + getFnBody(fnName) + "}";
 		}
