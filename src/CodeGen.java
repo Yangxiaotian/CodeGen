@@ -41,6 +41,7 @@ public class CodeGen implements ActionListener{
 	JButton button6 = new JButton("后台Service");
 	JScrollPane scroll = new JScrollPane(textarea1);
 	String priFlag = "Inside";
+	String author = "";
 	public void createUI(){
 		frame.setLocation(500,200);
 		frame.setSize(800,800);
@@ -100,7 +101,9 @@ public class CodeGen implements ActionListener{
 			osw.write("jdbc.driverClassName=jdbc:mysql://IP:3306/数据库名\r\n"+
                       "jdbc.driverClassName=com.mysql.jdbc.Driver\r\n"+
                       "jdbc.username=root\r\n"+
-                      "jdbc.password=");
+                      "jdbc.password=\r\n"+
+                      "author="
+            );
 			osw.close();
 		}
 	}
@@ -124,6 +127,7 @@ public class CodeGen implements ActionListener{
 	        	case 1: Class.forName(str.split("=")[1]);break;
 	        	case 2: userName = str.split("=")[1];break;
 	        	case 3: password = str.split("=")[1];break;
+	        	case 4: author = str.split("=")[1];break;
 	        	}
 	        	k++;
 	        }
@@ -454,23 +458,23 @@ public class CodeGen implements ActionListener{
 		String codeBody = "";
 		if(method.equals("add")) {
 			cnHead = "新增";
-			codeBody = "public void add" + modeName + "(Map<String,Object> params);\n";
+			codeBody = "public void add" + modeName + "(Map<String,Object> p);\n";
 		}else if(method.equals("update")) {
 			cnHead = "更新";
-			codeBody = "public int update" + modeName + "(Map<String,Object> params);\n";
+			codeBody = "public int update" + modeName + "(Map<String,Object> p);\n";
 		}else if(method.equals("del")) {
 			cnHead = "删除";
-			codeBody = "public int del" + modeName + "(Map<String,Object> params);\n";
+			codeBody = "public int del" + modeName + "(Map<String,Object> p);\n";
 		}else if(method.equals("list")) {
 			cnHead = "获取";
 			cnTail = "列表";
-			codeBody = "public List<" + modeName + "> get" + modeName + "List(Map<String,Object> params);\n";
+			codeBody = "public List<" + modeName + "> get" + modeName + "List(Map<String,Object> p);\n";
 		}else if(method.equals("count")) {
 			cnHead = "获取";
 			cnTail = "总数";
-			codeBody = "public int get" + modeName + "Count(Map<String,Object> params);\n";
+			codeBody = "public int get" + modeName + "Count(Map<String,Object> p);\n";
 		}
-		String result = "\t/**\n\t * "+cnHead+tblComment+cnTail+"\n\t * @author XXX\n\t */\n\t"+codeBody;
+		String result = "\t/**\n\t * "+cnHead+tblComment+cnTail+"\n\t * @author "+author+"\n\t */\n\t"+codeBody;
 		return result;
 	}
 	public String getServiceCode(String tblName, String tblComment) {
@@ -491,41 +495,41 @@ public class CodeGen implements ActionListener{
 			cnHead = "新增";
 			fnName = "add" + modeName;
 			priFnName = fnName + priFlag;
-			codeBody = "public boolean " + fnName + "(Map<String,Object> params) {" + getFnBody(tblName, fnName) + "}";
-			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> params) {" + getFnBody(tblName, priFnName) + "}";
+			codeBody = "public boolean " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
+			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> p) {" + getFnBody(tblName, priFnName) + "}";
 		}else if(method.equals("update")) {
 			cnHead = "更新";
 			fnName = "update" + modeName;
 			priFnName = fnName + priFlag;
-			codeBody = "public boolean " + fnName + "(Map<String,Object> params) {" + getFnBody(tblName, fnName) + "}";
-			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> params) {" + getFnBody(tblName, priFnName) + "}";
+			codeBody = "public boolean " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
+			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> p) {" + getFnBody(tblName, priFnName) + "}";
 		}else if(method.equals("del")) {
 			cnHead = "删除";
 			fnName = "del" + modeName;
 			priFnName = fnName + priFlag;
-			codeBody = "public boolean " + fnName + "(Map<String,Object> params) {" + getFnBody(tblName, fnName) + "}";
-			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> params) {" + getFnBody(tblName, priFnName) + "}";
+			codeBody = "public boolean " + fnName + "(Map<String,Object> p) {" + getFnBody(tblName, fnName) + "}";
+			codeBody += "\n\t@Transactional(rollbackFor = Exception.class)\n\tpublic void " + priFnName + "(Map<String,Object> p) {" + getFnBody(tblName, priFnName) + "}";
 		}else if(method.equals("list")) {
 			cnHead = "获取";
 			cnTail = "列表";
 			fnName = "get" + modeName + "List";
-			codeBody = "public List<" + modeName + "> " + fnName + "(Map<String,Object> params) {" + getFnBody(fnName) + "}";
+			codeBody = "public List<" + modeName + "> " + fnName + "(Map<String,Object> p) {" + getFnBody(fnName) + "}";
 		}else if(method.equals("count")) {
 			cnHead = "获取";
 			cnTail = "总数";
 			fnName = "get" + modeName + "Count";
-			codeBody = "public int get" + modeName + "Count(Map<String,Object> params) {" + getFnBody(fnName) + "}";
+			codeBody = "public int get" + modeName + "Count(Map<String,Object> p) {" + getFnBody(fnName) + "}";
 		}
-		String result = "\t/**\n\t * "+cnHead+tblComment+cnTail+"\n\t * @author XXX\n\t */\n\t"+codeBody+"\n";
+		String result = "\t/**\n\t * "+cnHead+tblComment+cnTail+"\n\t * @author "+author+"\n\t */\n\t"+codeBody+"\n";
 		return result;
 	}
 	public String getFnBody(String fnName) {
 		if(fnName.endsWith("Count")) {
-			return "\n\t\treturn xxxMapper."+fnName+"(params);\n\t";
+			return "\n\t\treturn xxxMapper."+fnName+"(p);\n\t";
 		} else if(fnName.endsWith("List")) {
-			return "\n\t\tint total = xxxMapper."+fnName.substring(0,fnName.length()-4) + "Count(params);"
-			        + "\n\t\tparams.put(gp.util.Const.AJAX_SERVICE_TOTAL, total);"
-					+ "\n\t\treturn xxxMapper."+fnName+"(params);\n\t";
+			return "\n\t\tint total = xxxMapper."+fnName.substring(0,fnName.length()-4) + "Count(p);"
+			        + "\n\t\tp.put(gp.util.Const.AJAX_SERVICE_TOTAL, total);"
+					+ "\n\t\treturn xxxMapper."+fnName+"(p);\n\t";
 		} 
 		return "";
 	}

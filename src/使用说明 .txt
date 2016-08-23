@@ -1,6 +1,2 @@
 第一次运行会在程序所在目录生成bin文件夹里头有配置文件setting.txt
-通过设置setting.txt配置好数据库连接、库名、用户名、密码再使用
-默认条件下setting.txt放在src下，这样代码中setting.txt的路径是bin\\setting.txt，在eclipse里直接可以运行
-但打包后不能运行，因为如果要运行需要建一个bin文件夹，并且这个文件夹需要和jar同路径，
-也可以将setting.txt文件放在与打包好的jar同目录下，这样代码中路径改为setting.txt
-这样很方便修改setting.txt这个配置文件
+在setting.txt配置：数据库连接、库名、用户名、密码、代码注释中的作者
