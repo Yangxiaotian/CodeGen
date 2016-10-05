@@ -46,7 +46,7 @@ public class CodeGen implements ActionListener{
 		frame.setLocation(500,200);
 		frame.setSize(800,800);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setVisible(true);
+		
 		panel.setLayout(new BorderLayout());
 		textfield.addFocusListener(new FocusListener() {
 			
@@ -85,6 +85,7 @@ public class CodeGen implements ActionListener{
 		}catch(Exception e) {
 			textarea1.setText(e.getMessage());
 		}
+		frame.setVisible(true);
 		
 	}
 	public static void main(String[] args) {
