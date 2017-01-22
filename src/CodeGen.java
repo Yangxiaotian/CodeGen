@@ -126,7 +126,7 @@ public class CodeGen implements ActionListener{
 	        int k = 0;
 	        while((str = br.readLine()) != null) {
 	        	switch(k) {
-	        	case 0: url = str.split("=")[1]; break;
+	        	case 0: url = str.split("driverClassName=")[1]; break;
 	        	case 1: Class.forName(str.split("=")[1]);break;
 	        	case 2: userName = str.split("=")[1];break;
 	        	case 3: password = str.split("=")[1];break;
@@ -135,15 +135,22 @@ public class CodeGen implements ActionListener{
 	        	k++;
 	        }
 	        br.close();
-	        String dataBaseName = url.split("\\d+/")[1];
-	        System.out.println(dataBaseName);
+	        String dataBaseName = "";
+	        String dbfield = null;
+	        if(url.startsWith("jdbc:mysql")) {
+	        	dataBaseName = url.split("\\d+/")[1];
+	        	dbfield = "TABLE_SCHEMA";
+	        }else if(url.startsWith("jdbc:sqlserver")) {
+	        	dataBaseName = url.split("DatabaseName=")[1];
+	        	dbfield = "TABLE_CATALOG";
+	        }
 			Connection con = DriverManager.getConnection(url,userName,password); 
 			Statement stmt = con.createStatement();
-			ResultSet rs1 = stmt.executeQuery("select * from information_schema.TABLES where table_name = \'" + tblName + "\'" + "and table_schema = \'"+dataBaseName+"\'");
-			rs1.next();
+//			ResultSet rs1 = stmt.executeQuery("select * from information_schema.TABLES where table_name = \'" + tblName + "\'" + "and table_schema = \'"+dataBaseName+"\'");
+//			rs1.next();
 //			 String tblComment = rs1.getString("TABLE_COMMENT");
 //			 tblComment = tblComment.replace("\n", "：");
-			 ResultSet rs = stmt.executeQuery("select * from information_schema.COLUMNS where table_name = \'" + tblName + "\'" + "and table_schema = \'"+dataBaseName+"\'");
+			 ResultSet rs = stmt.executeQuery("select * from information_schema.COLUMNS where table_name = \'" + tblName + "\'" + "and "+dbfield+"= \'"+dataBaseName+"\'");
 			 String Code;
 			 if(e.getSource() == button1) {
 				 Code = getBackCode(tblName, rs);
@@ -162,6 +169,7 @@ public class CodeGen implements ActionListener{
 			 }
 			 textarea1.setText(Code);
 		}catch(Exception e1) {
+			e1.printStackTrace();
 			textarea1.setText(e1.getMessage());
 		}
 	}
@@ -211,9 +219,7 @@ public class CodeGen implements ActionListener{
 		List<String[]> list = new ArrayList<String[]>();
 		while(rs.next()) {
 			String[] temp = new String[3];
-			temp[0] = rs.getString("COLUMN_COMMENT");
-			temp[1] = rs.getString("COLUMN_NAME");
-			temp[2] = rs.getString("COLUMN_TYPE");
+			getColumnNameType(rs, temp);
 			if(temp[2].indexOf("varchar") != -1) {
 				temp[2] = "string";
 			} else if(temp[2].indexOf("datetime") != -1){
@@ -228,9 +234,6 @@ public class CodeGen implements ActionListener{
 			if(notBase(temp[1])) {
 				list.add(temp);
 			}
-			if(rs.getString("COLUMN_KEY").equals("PRI")) {
-				idProperty = temp[1];
-			}
 		}
 		String result = "Ext.define(\'yxt.model.XXXX." + getModelName(tblName) + "\', {\n\textend:\'Ext.data.Model\',\n\tidProperty:\'" 
 			            + idProperty +"\',\n\tfields:[\n";
@@ -240,15 +243,25 @@ public class CodeGen implements ActionListener{
 		result += "\t]\n});";
 		return result;
 	}
+	private void getColumnNameType(ResultSet rs, String[] temp) throws SQLException {
+		try {
+			temp[0] = rs.getString("COLUMN_COMMENT");
+			temp[1] = rs.getString("COLUMN_NAME");
+			temp[2] = rs.getString("COLUMN_TYPE");
+		}catch(Exception e) {
+			temp[0] = null;
+			temp[1] = rs.getString("COLUMN_NAME");
+			temp[2] = rs.getString("DATA_TYPE");
+		}
+	}
 	public String getBackCode(String tblName, ResultSet rs) throws SQLException {
 		String result = "public class " + getModelName(tblName) +
 				" {\n";
 		List<String[]> list = new ArrayList<String[]>();
 		while(rs.next()) {
 			String[] temp = new String[3];
-			temp[0] = rs.getString("COLUMN_COMMENT");
-			temp[1] = rs.getString("COLUMN_NAME");
-			temp[2] = rs.getString("COLUMN_TYPE");
+			getColumnNameType(rs, temp);
+			
 			if(temp[2].indexOf("char") != -1) {
 				temp[2] = "String";
 			} else if(temp[2].indexOf("datetime") != -1){
@@ -265,7 +278,7 @@ public class CodeGen implements ActionListener{
 			}
 		}
 		for(String[] col: list) {
-			result += "\tprivate " + col[2] + " " + col[1] + ";//" + col[0] + "\n";
+			result += "\tprivate " + col[2] + " " + col[1] + ";"+(col[0]!=null?("//" + col[0] + "\n"):"\n");
 		}
 		result += "\n";
 		for(String[] col: list) {
@@ -279,6 +292,7 @@ public class CodeGen implements ActionListener{
 	public String getBackCtrlCode(String tblName) {
 		String result = "";
 		String modeName = getModelName(tblName);
+		System.out.println(modeName);
 		String prefix = modeName.substring(0, 1).toLowerCase()+modeName.substring(1);
 		result += "@Controller(value = \"com.XXX.ctrl."+modeName+"Ctrl\")\n";
 		result += "@RequestMapping(\"[app]/[model]\")\n";
@@ -302,7 +316,7 @@ public class CodeGen implements ActionListener{
 		return result;
 	}
 	public boolean notBase(String s) {
-		String[] basePool = {};
+		String[] basePool = {"id"};
 		for(String elem: basePool) {
 			if(s.equals(elem)) {
 				return false;
@@ -313,6 +327,7 @@ public class CodeGen implements ActionListener{
 	public String getModelName(String tblName) {
 		String modelName = "";
 		String[] arr = tblName.split("_");
+		if(arr.length == 1) return tblName;
 		for(int i = 1; i < arr.length; i++) {
 			modelName += arr[i].substring(0,1).toUpperCase()+arr[i].substring(1); 
 		}
@@ -331,10 +346,8 @@ public class CodeGen implements ActionListener{
 		List<Map<String,Object>> mapList = new ArrayList<Map<String,Object>>();
 		while(rs.next()) {
 			String columnName = rs.getString("COLUMN_NAME");
-			String columnKey = rs.getString("COLUMN_KEY");
 			Map<String,Object> map = new HashMap<String,Object>();
 			map.put("columnName", columnName);
-			map.put("columnKey", columnKey);
 			mapList.add(map);
 		}
 		String countSql = getCountSql(tblName, mapList, tblComment);
@@ -347,21 +360,17 @@ public class CodeGen implements ActionListener{
 	}
 	public String getInsertSql(String tblName, List<Map<String,Object>> mapList, String tblComment) {
 		String result;
-		String primaryKey = null;
 		String modeName = getModelName(tblName);
 		try {
 			result = "\t<!-- 新增" + tblComment + " -->\n\t<insert id=\"add" + modeName 
-					+ "\" parameterType=\"com.XXX.model."+modeName+"\" useGeneratedKeys=\"true\" keyProperty=\"BIGBANG\">\n\t\tinsert into " 
+					+ "\" parameterType=\"com.XXX.model."+modeName+"\" useGeneratedKeys=\"true\" keyProperty=\"id\">\n\t\tinsert into " 
 					+ tblName + "\n";
 			String up = "\t\t(\n\t\t\t";
 			String down = "values\n\t\t(\n\t\t\t";
 			int i = 0;
 			for(Map<String,Object> map: mapList) {
 				String columnName = (String)map.get("columnName");
-				String columnKey = (String)map.get("columnKey");
-				if("PRI".equals(columnKey)) {
-					 primaryKey = columnName;
-				}else if(notBase(columnName)) {
+				if(notBase(columnName)) {
 					up += columnName +(i+1==mapList.size()?"\n\t\t":",\n\t\t\t");
 					down += "#{" + columnName + "}"+(i+1==mapList.size()?"\n\t\t":",\n\t\t\t");
 				}
@@ -370,7 +379,6 @@ public class CodeGen implements ActionListener{
 			result += up + ")" 
 					     + down + ")\n"; 
 			result += "\t</insert>\n";
-			result = result.replace("BIGBANG", primaryKey);
 		} catch(Exception e) {
 			e.printStackTrace();
 			return "输入有误";
