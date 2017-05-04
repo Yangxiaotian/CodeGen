@@ -130,7 +130,7 @@ public class CodeGen implements ActionListener{
 	        	case 1: Class.forName(str.split("=")[1]);break;
 	        	case 2: userName = str.split("=")[1];break;
 	        	case 3: password = str.split("=")[1];break;
-	        	case 4: author = str.split("=")[1];break;
+	        	case 4: author = str.split("=").length>1?str.split("=")[1]:"";break;
 	        	}
 	        	k++;
 	        }
