@@ -44,7 +44,7 @@ public class CodeGen implements ActionListener{
 	String author = "";
 	public void createUI(){
 		frame.setLocation(500,200);
-		frame.setSize(800,800);
+		frame.setSize(800,600);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		panel.setLayout(new BorderLayout());
@@ -129,7 +129,7 @@ public class CodeGen implements ActionListener{
 	        	case 0: url = str.split("driverClassName=")[1]; break;
 	        	case 1: Class.forName(str.split("=")[1]);break;
 	        	case 2: userName = str.split("=")[1];break;
-	        	case 3: password = str.split("=")[1];break;
+	        	case 3: password = str.split("=").length>1?str.split("=")[1]:"";break;
 	        	case 4: author = str.split("=").length>1?str.split("=")[1]:"";break;
 	        	}
 	        	k++;
