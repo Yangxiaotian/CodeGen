@@ -43,8 +43,7 @@ public class CodeGen implements ActionListener{
 	JScrollPane scroll = new JScrollPane(textarea1);
 	String author = "";
 	public void createUI(){
-		frame.setLocation(500,200);
-		frame.setSize(800,600);
+		frame.setSize(600,500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		panel.setLayout(new BorderLayout());
@@ -85,6 +84,7 @@ public class CodeGen implements ActionListener{
 		}catch(Exception e) {
 			textarea1.setText(e.getMessage());
 		}
+		frame.setLocationRelativeTo(null);
 		frame.setVisible(true);
 		
 	}
@@ -231,9 +231,7 @@ public class CodeGen implements ActionListener{
 			} else if(temp[2].indexOf("decimal") != -1) {
 				temp[2] = "number";
 			} 
-			if(notBase(temp[1])) {
-				list.add(temp);
-			}
+			list.add(temp);
 		}
 		String result = "Ext.define(\'yxt.model.XXXX." + getModelName(tblName) + "\', {\n\textend:\'Ext.data.Model\',\n\tidProperty:\'" 
 			            + idProperty +"\',\n\tfields:[\n";
@@ -273,9 +271,7 @@ public class CodeGen implements ActionListener{
 			} else if(temp[2].indexOf("decimal") != -1) {
 				temp[2] = "double";
 			} 
-			if(notBase(temp[1])) {
-				list.add(temp);
-			}
+			list.add(temp);
 		}
 		for(String[] col: list) {
 			result += "\tprivate " + col[2] + " " + col[1] + ";"+(col[0]!=null?("//" + col[0] + "\n"):"\n");
@@ -362,7 +358,7 @@ public class CodeGen implements ActionListener{
 		String result;
 		String modeName = getModelName(tblName);
 		try {
-			result = "\t<!-- 新增" + tblComment + " -->\n\t<insert id=\"add" + modeName 
+			result = "\t<!-- 新增" + tblComment + " -->\n\t<insert id=\"create" + modeName 
 					+ "\" parameterType=\"com.XXX.model."+modeName+"\" useGeneratedKeys=\"true\" keyProperty=\"id\">\n\t\tinsert into " 
 					+ tblName + "\n";
 			String up = "\t\t(\n\t\t\t";
@@ -403,7 +399,7 @@ public class CodeGen implements ActionListener{
 				}
 				i++;
 			}
-			result += "where " + primaryKey + " = #{" + primaryKey + "}\n"; 
+			result += "where id = #{id}\n"; 
 			result += "\t</update>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -427,6 +423,7 @@ public class CodeGen implements ActionListener{
 			}
 			result += primaryKey + ") from " + tblName + 
 						" where \n\t\t"
+					+getIfTest("id", "=", "#{id}")+"\n\t\t"
 					+getIfTest("ono", "like", "'${ono}%'")+"\n\t\t"
 					+getIfTest("name", "like", "'%${name}%'")+"\n\t\t    ";
 			result += "\n\t</select>\n";
@@ -457,7 +454,7 @@ public class CodeGen implements ActionListener{
 			}
 			result += "\tfrom " + tblName + 
 						" where\n\t\t"
-					+getIfTest(primaryKey)+"\n\t\t"
+					+getIfTest("id", "=", "#{id}")+"\n\t\t"
 					+getIfTest("name", "like", "'%${name}%'")+"\n\t\t"
 					+getIfTest("ono", "like", "'${ono}%'")+"\n\t\t"
 					+getIfTest("start", "", "limit ${start}, ${limit}");
@@ -486,7 +483,7 @@ public class CodeGen implements ActionListener{
 		String result = "";
 		String modeName = getModelName(tblName);
 		try {
-			result = "\t<!-- 删除" + tblComment + " -->\n\t<delete id=\"del" + modeName 
+			result = "\t<!-- 删除" + tblComment + " -->\n\t<delete id=\"delete" + modeName 
 					+ "\" parameterType=\"map\">\n\t\tdelete from " + tblName + " where id = #{id}\n\t</delete>\n";
 		} catch(Exception e) {
 			e.printStackTrace();
@@ -497,9 +494,9 @@ public class CodeGen implements ActionListener{
 	public String getDaoCode(String tblName, String tblComment) {
 		return getDaoCodeCore("count", tblName, tblComment) 
 				+ getDaoCodeCore("list", tblName, tblComment)
-				+ getDaoCodeCore("add", tblName, tblComment)
+				+ getDaoCodeCore("create", tblName, tblComment)
 				+ getDaoCodeCore("update", tblName, tblComment)
-				+ getDaoCodeCore("del", tblName, tblComment);
+				+ getDaoCodeCore("delete", tblName, tblComment);
 	}
 	public String getDaoCodeCore(String method, String tblName, String tblComment) {
 		String modeName = getModelName(tblName);
@@ -507,15 +504,15 @@ public class CodeGen implements ActionListener{
 		String cnHead ="";
 		String cnTail = "";
 		String codeBody = "";
-		if(method.equals("add")) {
+		if(method.equals("create")) {
 			cnHead = "新增";
-			codeBody = "public void add" + modeName + "("+modeName+" "+prefix+");\n";
+			codeBody = "public void create" + modeName + "("+modeName+" "+prefix+");\n";
 		}else if(method.equals("update")) {
 			cnHead = "更新";
 			codeBody = "public void update" + modeName + "("+modeName+" "+prefix+");\n";
-		}else if(method.equals("del")) {
+		}else if(method.equals("delete")) {
 			cnHead = "删除";
-			codeBody = "public int del" + modeName + "(Map<String,Object> p);\n";
+			codeBody = "public int delete" + modeName + "(Map<String,Object> p);\n";
 		}else if(method.equals("list")) {
 			cnHead = "获取";
 			cnTail = "列表";
@@ -531,9 +528,9 @@ public class CodeGen implements ActionListener{
 	public String getServiceCode(String tblName, String tblComment) {
 		return getServiceCodeCore("count", tblName, tblComment) 
 				+ getServiceCodeCore("list", tblName, tblComment)
-				+ getServiceCodeCore("add", tblName, tblComment)
+				+ getServiceCodeCore("create", tblName, tblComment)
 				+ getServiceCodeCore("update", tblName, tblComment)
-				+ getServiceCodeCore("del", tblName, tblComment);
+				+ getServiceCodeCore("delete", tblName, tblComment);
 	}
 	public String getServiceCodeCore(String method, String tblName, String tblComment) {
 		String modeName = getModelName(tblName);
@@ -542,17 +539,17 @@ public class CodeGen implements ActionListener{
 		String cnTail = "";
 		String codeBody = "";
 		String fnName = "";
-		if(method.equals("add")) {
+		if(method.equals("create")) {
 			cnHead = "新增";
-			fnName = "add" + modeName;
+			fnName = "create" + modeName;
 			codeBody = "public void " + fnName + "("+modeName+" "+prefix+") {" + getFnBody(tblName, fnName) + "}";
 		}else if(method.equals("update")) {
 			cnHead = "更新";
 			fnName = "update" + modeName;
 			codeBody = "public void " + fnName + "("+modeName+" "+prefix+") {" + getFnBody(tblName, fnName) + "}";
-		}else if(method.equals("del")) {
+		}else if(method.equals("delete")) {
 			cnHead = "删除";
-			fnName = "del" + modeName;
+			fnName = "delete" + modeName;
 			codeBody = "public void " + fnName + "(int id) {" + getFnBody(tblName, fnName) + "}";
 		}else if(method.equals("list")) {
 			cnHead = "获取";
@@ -572,9 +569,9 @@ public class CodeGen implements ActionListener{
 		String result = "";
 		String modelName = getModelName(tblName);
 		String prefix = modelName.substring(0, 1).toLowerCase()+modelName.substring(1);
-		if(fnName.startsWith("add") || fnName.startsWith("update")) {
+		if(fnName.startsWith("create") || fnName.startsWith("update")) {
 			return "\n\t\t"+prefix+"Dao."+fnName+"("+prefix+");\n\t";
-		} else if(fnName.startsWith("del")) {
+		} else if(fnName.startsWith("delete")) {
 			return 	"\n\t\tMap<String,Object> p = new HashMap<String,Object>();"
 					+"\n\t\tp.put(\"id\", id);"
 					+"\n\t\t"+prefix+"Dao."+fnName+"(p);\n\t";
