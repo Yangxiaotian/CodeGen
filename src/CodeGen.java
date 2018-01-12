@@ -43,7 +43,7 @@ public class CodeGen implements ActionListener{
 	JScrollPane scroll = new JScrollPane(textarea1);
 	String author = "";
 	public void createUI(){
-		frame.setSize(600,500);
+		frame.setSize(700,500);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
 		panel.setLayout(new BorderLayout());
