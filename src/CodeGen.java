@@ -409,19 +409,11 @@ public class CodeGen implements ActionListener{
 	}
 	public String getCountSql(String tblName, List<Map<String,Object>> mapList, String tblComment) {
 		String result = "";
-		String primaryKey = null;
 		String modeName = getModelName(tblName);
 		try {
 			result = "\t<!-- 获取" + tblComment + " 数量-->\n\t<select id=\"get" + modeName 
-					+ "Count\" parameterType=\"map\" resultType=\"int\">\n\t\tselect count(";
-			for(Map<String,Object> map: mapList) {
-				String columnName = (String)map.get("columnName");
-				String columnKey = (String)map.get("columnKey");
-				if("PRI".equals(columnKey)) {
-					 primaryKey = columnName;
-				}
-			}
-			result += primaryKey + ") from " + tblName + 
+					+ "Count\" parameterType=\"map\" resultType=\"int\">\n\t\tselect count(*) from "
+					+ tblName + 
 						" where \n\t\t"
 					+getIfTest("id", "=", "#{id}")+"\n\t\t"
 					+getIfTest("ono", "like", "'${ono}%'")+"\n\t\t"
